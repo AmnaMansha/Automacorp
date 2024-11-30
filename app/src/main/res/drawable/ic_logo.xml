@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+<!--    @Composable-->
+<!--    fun AppLogo(modifier: Modifier) {-->
+<!--    Image(-->
+<!--    painter = painterResource(R.drawable.ic_logo),-->
+<!--    contentDescription = stringResource(R.string.app_logo_description),-->
+<!--    modifier = modifier.paddingFromBaseline(top = 100.dp).height(80.dp),-->
+<!--    )-->
+<!--    }-->
+</selector>
