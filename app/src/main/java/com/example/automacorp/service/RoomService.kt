@@ -32,7 +32,7 @@ object RoomService {
         )
     }
 
-    // Create 50 rooms
+    // Create 2 rooms
     val ROOMS = (1..50).map { generateRoom(it.toLong()) }.toMutableList()
 
     fun findAll(): List<RoomDto> {
@@ -47,17 +47,25 @@ object RoomService {
         return ROOMS.find { it.name.equals(name, ignoreCase = true) }
     }
 
-
     fun updateRoom(id: Long, room: RoomDto): RoomDto? {
         val index = ROOMS.indexOfFirst { it.id == id }
-        val updatedRoom = findById(id)?.copy(
-            name = room.name,
-            targetTemperature = room.targetTemperature,
-            currentTemperature = room.currentTemperature
-        ) ?: throw IllegalArgumentException()
-        return ROOMS.set(index, updatedRoom)
-    }
 
+        // If room exists in the list, update it; otherwise, throw an exception
+        return if (index != -1) {
+            // Create a new room with updated values and replace the old one
+            val updatedRoom = room.copy(
+                id = id,  // Maintain the original room ID
+                currentTemperature = room.currentTemperature,
+                targetTemperature = room.targetTemperature,
+                windows = room.windows
+            )
+            // Replace the existing room at the index
+            ROOMS[index] = updatedRoom  // This is the array-like assignment to update the room
+            updatedRoom
+        } else {
+            throw IllegalArgumentException("Room with ID $id not found")
+        }
+    }
     fun findByNameOrId(nameOrId: String?): RoomDto? {
         if (nameOrId != null) {
             return if (nameOrId.isDigitsOnly()) {

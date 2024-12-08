@@ -2,6 +2,7 @@ package com.example.automacorp
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -39,6 +40,7 @@ class MainActivity : ComponentActivity() {
         val onSayHelloButtonClick: (name: String) -> Unit = {name->
             val intent = Intent(this, RoomActivity::class.java).apply {
                 putExtra(ROOM_PARAM, name)
+
             }
             startActivity(intent)
         }

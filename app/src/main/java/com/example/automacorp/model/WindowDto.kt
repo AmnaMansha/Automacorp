@@ -1,5 +1,5 @@
 package com.example.automacorp.model
-enum class WindowStatus { OPENED, CLOSED}
+enum class WindowStatus { OPENED, CLOSED, OPEN }
 data class WindowDto(
     val id: Long,
     val name: String,

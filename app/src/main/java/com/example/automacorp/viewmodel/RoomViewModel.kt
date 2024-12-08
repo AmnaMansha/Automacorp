@@ -7,4 +7,5 @@ import com.example.automacorp.model.RoomDto
 
 class RoomViewModel: ViewModel() {
     var room by mutableStateOf<RoomDto?>(null)
+
 }

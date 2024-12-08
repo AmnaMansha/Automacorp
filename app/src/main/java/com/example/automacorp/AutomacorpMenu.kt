@@ -1,5 +1,4 @@
 package com.example.automacorp
-
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,7 +18,7 @@ import com.example.automacorp.ui.theme.AutomacorpTheme
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun AutomacorpTopAppBar(title: String? = null, returnAction: () -> Unit = {}) {
+fun AutomacorpTopAppBar(title: String? = null, returnAction: () -> Unit = {}, onBack: () -> Unit) {
     val colors = TopAppBarDefaults.topAppBarColors(
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         titleContentColor = MaterialTheme.colorScheme.primary,
@@ -75,14 +74,18 @@ fun AutomacorpTopAppBar(title: String? = null, returnAction: () -> Unit = {}) {
 @Composable
 fun AutomacorpTopAppBarHomePreview() {
     AutomacorpTheme {
-        AutomacorpTopAppBar(null)
+        AutomacorpTopAppBar(null, onBack = { finish() })
     }
+}
+
+fun finish() {
+    TODO("Not yet implemented")
 }
 
 @Preview(showBackground = true)
 @Composable
 fun AutomacorpTopAppBarPreview() {
     AutomacorpTheme {
-        AutomacorpTopAppBar("A page")
+        AutomacorpTopAppBar("A page", onBack = { finish() })
     }
 }
