@@ -25,6 +25,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -40,28 +42,46 @@ import com.example.automacorp.viewmodel.RoomViewModel
 import kotlin.math.round
 
 class RoomActivity : ComponentActivity() {
+    private val viewModel: RoomViewModel by viewModels()
+    var isRoomListVisible by remember { mutableStateOf(false) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val param = intent.getStringExtra(MainActivity.ROOM_PARAM)
-        val roomdata = RoomService.findByNameOrId(param)
+
+        val param = intent.getLongExtra(MainActivity.ROOM_PARAM, -1L)
+        val roomdata = RoomService.findById(param)
         val navigateBack: () -> Unit = {
             startActivity(Intent(baseContext, MainActivity::class.java))
         }
         Log.d("roomdata", roomdata.toString())
         val viewModel: RoomViewModel by viewModels()
-        viewModel.room = roomdata
+        if (roomdata != null) {
+            viewModel.room = roomdata
+        } else {
+            // If no room data is found, fetch the list of rooms
+            viewModel.fetchRooms()
+        }
+
         val onRoomSave: () -> Unit = {
             roomdata?.let { roomDto ->
                 try {
                     RoomService.updateRoom(roomDto.id, roomDto)
-                    Toast.makeText(baseContext, "Room ${roomDto.name} was updated successfully", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        baseContext,
+                        "Room ${roomDto.name} was updated successfully",
+                        Toast.LENGTH_LONG
+                    ).show()
                     startActivity(Intent(baseContext, MainActivity::class.java))
                     finish() // Close current activity
                 } catch (e: Exception) {
-                    Toast.makeText(baseContext, "Failed to update room: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        baseContext,
+                        "Failed to update room: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             } ?: run {
-                Toast.makeText(baseContext, "No room data available to update", Toast.LENGTH_SHORT).show()
+                Toast.makeText(baseContext, "No room data available to update", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
 
@@ -69,142 +89,156 @@ class RoomActivity : ComponentActivity() {
         setContent {
             AutomacorpTheme {
                 Scaffold(
-                    topBar = { AutomacorpTopAppBar("Room", navigateBack) { finish() } },
+                    topBar = {
+                        AutomacorpTopAppBar(
+                            title = "Room",
+                            navigateBack,
+                            onRoomsIconClick = {
+                                // Toggle the screen to show the room list
+                                isRoomListVisible = !isRoomListVisible
+                            }
+                        )
+                    },
                     floatingActionButton = { RoomUpdateButton(onRoomSave) },
-                    modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    if ( viewModel.room!= null) {
-                        Toast.makeText(this, "Havr Rooms!", Toast.LENGTH_SHORT).show()
-
-                        RoomDetail(viewModel,Modifier.padding(innerPadding))
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+                    // If a single room is loaded, show the room detail
+                    if (viewModel.room != null) {
+                        RoomDetail(viewModel, Modifier.padding(innerPadding))
                     } else {
-                        NoRoom(Modifier.padding(innerPadding))
+                        // Show the list of rooms if no room is selected
+                        RoomListScreen(viewModel, Modifier.padding(innerPadding))
                     }
                 }
+
             }
         }
+
     }
-}
 
-@Composable
-fun RoomDetail(model: RoomViewModel, modifier: Modifier = Modifier) {
-    val room = model.room
-    if (room == null) {
-        Text("Room details not available", modifier = Modifier.padding(16.dp))
-        return
-    }
-    Column(modifier = modifier.padding(16.dp)) {
+    @Composable
+    fun RoomDetail(model: RoomViewModel, modifier: Modifier = Modifier) {
+        val room = model.room
+        if (room == null) {
+            Text("Room details not available", modifier = Modifier.padding(16.dp))
+            return
+        }
+        Column(modifier = modifier.padding(16.dp)) {
 
-        OutlinedTextField(
-            value = room.name,
-            onValueChange = { model.room = room.copy(name = it) },
-            label = { Text(text = "Room Name") },
-            modifier = Modifier.fillMaxWidth(),
+            OutlinedTextField(
+                value = room.name,
+                onValueChange = { model.room = room.copy(name = it) },
+                label = { Text(text = "Room Name") },
+                modifier = Modifier.fillMaxWidth(),
 
 
+                )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Current Temperature
+            OutlinedTextField(
+                value = room.currentTemperature.toString(),
+                onValueChange = {
+                    model.room = room.copy(
+                        currentTemperature = it.toDoubleOrNull() ?: room.currentTemperature
+                    )
+                },
+                label = { Text("Current Temperature") },
+                modifier = Modifier.fillMaxWidth()
             )
-        Spacer(modifier = Modifier.height(16.dp))
 
-        // Current Temperature
-        OutlinedTextField(
-            value = room.currentTemperature.toString(),
-            onValueChange = {
-                model.room = room.copy(
-                    currentTemperature = it.toDoubleOrNull() ?: room.currentTemperature
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Target Temperature
+            OutlinedTextField(
+                value = room.targetTemperature.toString(),
+                onValueChange = {
+                    model.room = room.copy(
+                        targetTemperature = it.toDoubleOrNull() ?: room.targetTemperature
+                    )
+                },
+                label = { Text("Target Temperature") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            // Slider to adjust target temperature
+            Slider(
+                value = room.targetTemperature?.toFloat() ?: 18.0f,
+                onValueChange = { model.room = room.copy(targetTemperature = it.toDouble()) },
+                colors = SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.secondary,
+                    activeTrackColor = MaterialTheme.colorScheme.secondary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                ),
+                steps = 0,
+                valueRange = 10f..28f // Adjust the range as needed
+            )
+
+            // Display the target temperature value as text
+            Text(text = (round((room.targetTemperature ?: 18.0) * 10) / 10).toString())
+        }
+
+
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun RoomDetailPreview() {
+        val sampleRoom = RoomDto(
+            id = 1L,
+            name = "RoomA",
+            currentTemperature = 22.0,
+            targetTemperature = 20.0,
+            windows = listOf(
+                WindowDto(
+                    id = 1L,
+                    name = "Sliding Window",
+                    roomName = "RoomA",
+                    roomId = 1L,
+                    windowStatus = WindowStatus.CLOSED
+                ),
+                WindowDto(
+                    id = 2L,
+                    name = "Casement Window",
+                    roomName = "RoomA",
+                    roomId = 1L,
+                    windowStatus = WindowStatus.OPEN
+                )
+            )
+        )
+        val viewModel = RoomViewModel()
+        viewModel.room = sampleRoom
+        // Pass the mocked viewModel to the RoomDetail composable
+        RoomDetail(model = viewModel)
+    }
+
+    @Composable
+    fun NoRoom(modifier: Modifier = Modifier) {
+        Log.d("roomdata", "lll")
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.act_room_none),
+                style = MaterialTheme.typography.headlineSmall,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+
+    @Composable
+    fun RoomUpdateButton(onClick: () -> Unit) {
+        ExtendedFloatingActionButton(
+            onClick = { onClick() },
+            icon = {
+                Icon(
+                    Icons.Filled.Done,
+                    contentDescription = stringResource(R.string.act_room_save),
                 )
             },
-            label = { Text("Current Temperature") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Target Temperature
-        OutlinedTextField(
-            value = room.targetTemperature.toString(),
-            onValueChange = {
-                model.room = room.copy(
-                    targetTemperature = it.toDoubleOrNull() ?: room.targetTemperature
-                )
-            },
-            label = { Text("Target Temperature") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        // Slider to adjust target temperature
-        Slider(
-            value = room.targetTemperature?.toFloat() ?: 18.0f,
-            onValueChange = { model.room = room.copy(targetTemperature = it.toDouble()) },
-            colors = SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.secondary,
-                activeTrackColor = MaterialTheme.colorScheme.secondary,
-                inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
-            ),
-            steps = 0,
-            valueRange = 10f..28f // Adjust the range as needed
-        )
-
-        // Display the target temperature value as text
-        Text(text = (round((room.targetTemperature ?: 18.0) * 10) / 10).toString())
-    }
-
-
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RoomDetailPreview() {
-    val sampleRoom = RoomDto(
-        id = 1L,
-        name = "RoomA",
-        currentTemperature = 22.0,
-        targetTemperature = 20.0,
-        windows = listOf(
-            WindowDto(
-                id = 1L,
-                name = "Sliding Window",
-                roomName = "RoomA",
-                roomId = 1L,
-                windowStatus = WindowStatus.CLOSED
-            ),
-            WindowDto(
-                id = 2L,
-                name = "Casement Window",
-                roomName = "RoomA",
-                roomId = 1L,
-                windowStatus = WindowStatus.OPEN
-            )
-        )
-    )
-    val viewModel = RoomViewModel()
-    viewModel.room = sampleRoom
-    // Pass the mocked viewModel to the RoomDetail composable
-    RoomDetail(model = viewModel)
-}
-@Composable
-fun NoRoom(modifier: Modifier = Modifier) {
-    Log.d("roomdata","lll")
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.act_room_none),
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center
+            text = { Text(text = stringResource(R.string.act_room_save)) }
         )
     }
-}
-@Composable
-fun RoomUpdateButton(onClick: () -> Unit) {
-    ExtendedFloatingActionButton(
-        onClick = { onClick() },
-        icon = {
-            Icon(
-                Icons.Filled.Done,
-                contentDescription = stringResource(R.string.act_room_save),
-            )
-        },
-        text = { Text(text = stringResource(R.string.act_room_save)) }
-    )
 }

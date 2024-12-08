@@ -7,10 +7,13 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -23,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,9 +42,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val onSayHelloButtonClick: (name: String) -> Unit = {name->
-            val intent = Intent(this, RoomActivity::class.java).apply {
-                putExtra(ROOM_PARAM, name)
-
+            val validRoomPattern = Regex("^r.*", RegexOption.IGNORE_CASE)
+            val intent = if (validRoomPattern.matches(name)) {
+                Intent(this, RoomActivity::class.java).apply {
+                    putExtra(ROOM_PARAM, name)
+                }
+            } else {
+                Intent(this, Toast.makeText(baseContext, "Something Goes Wrong", Toast.LENGTH_SHORT).show()::class.java)
             }
             startActivity(intent)
         }
@@ -58,13 +66,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
+@Composable
+fun AppLogo(modifier: Modifier) {
+    Image(
+        painter = painterResource(R.drawable.ic_logo),
+        contentDescription = stringResource(R.string.app_logo_description),
+        modifier = modifier.paddingFromBaseline(top = 100.dp).height(80.dp),
+    )
+}
 @Composable
 fun Greeting(onClick: (name: String) -> Unit, modifier: Modifier = Modifier) {
     Column {
         // ...
         Column {
-//            AppLogo(Modifier.padding(top = 32.dp).fillMaxWidth())
+           AppLogo(Modifier.padding(top = 32.dp).fillMaxWidth())
             Text(
                 stringResource(R.string.act_main_welcome),
                 style = MaterialTheme.typography.headlineMedium,
