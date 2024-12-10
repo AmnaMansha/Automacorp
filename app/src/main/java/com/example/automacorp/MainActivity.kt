@@ -42,15 +42,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val onSayHelloButtonClick: (name: String) -> Unit = {name->
-            val validRoomPattern = Regex("^r.*", RegexOption.IGNORE_CASE)
-            val intent = if (validRoomPattern.matches(name)) {
+
+            val intent = if (name!==" ") {
                 Intent(this, RoomActivity::class.java).apply {
                     putExtra(ROOM_PARAM, name)
                 }
             } else {
-                Intent(this, Toast.makeText(baseContext, "Something Goes Wrong", Toast.LENGTH_SHORT).show()::class.java)
+                Toast.makeText(
+                    baseContext,
+                    "Please enter a valid room name ",
+                    Toast.LENGTH_SHORT
+                ).show()
+                null
             }
-            startActivity(intent)
+            intent?.let {
+                startActivity(it)
+            }
         }
 
         setContent {

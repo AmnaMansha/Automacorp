@@ -24,7 +24,12 @@ import com.example.automacorp.ui.theme.AutomacorpTheme
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun AutomacorpTopAppBar(title: String? = null,onRoomIconClick: () -> Unit = {}, returnAction: () -> Unit = {}) {
+fun AutomacorpTopAppBar(
+    title: String? = null,
+    onRoomIconClick:  () -> Unit = {},
+    returnAction: () -> Unit = {},
+
+    ) {
     val context = LocalContext.current
 
     val colors = TopAppBarDefaults.mediumTopAppBarColors(
@@ -33,10 +38,10 @@ fun AutomacorpTopAppBar(title: String? = null,onRoomIconClick: () -> Unit = {}, 
     )
     val actions: @Composable RowScope.() -> Unit = {
         IconButton(onClick = {
-            val intent = Intent(context, RoomActivity()::class.java)
+            val intent = Intent(context, RoomActivity::class.java)
             context.startActivity(intent)
             (context as? Activity)?.overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
-        }) {
+        })  {
             Icon(
                 painter = painterResource(R.drawable.ic_action_rooms),
                 contentDescription = stringResource(R.string.app_go_room_description)
@@ -114,10 +119,3 @@ fun AutomacorpTopAppBarHomePreview() {
 
 }
 
-@Preview(showBackground = true)
-@Composable
-fun AutomacorpTopAppBarPreview() {
-    AutomacorpTheme {
-        AutomacorpTopAppBar("A page")
-    }
-}

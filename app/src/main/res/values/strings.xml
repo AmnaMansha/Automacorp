@@ -8,7 +8,7 @@
     <string name="act_room_name">Room name</string>
     <string name="title_activity_room">RoomActivity</string>
     <string name="act_room_none">No room found for this id or name</string>
-    <string name="act_room_save">room saved for this id or name</string>
+    <string name="act_room_save">Update Room for this id or name</string>
     <string name="room_detail">Room Details</string>
     <string name="rooms_list">Room List</string>
     <string name="act_room_current_temperature">Current temperature</string>
